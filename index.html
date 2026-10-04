@@ -6,10 +6,15 @@
 
     <meta name="theme-color" content="#111827">
     <meta name="description" content="Busca Lá - Central de entregadores">
+    <meta property="og:title" content="Busca Lá">
+    <meta property="og:description" content="Busca Lá - Central de entregadores">
+    <link rel="manifest" href="/src/public/manifest.webmanifest">
 
     <title>Busca Lá</title>
+    <link rel="icon" type="image/png" href="/Logo BuscaLá com Entrega Rápida.png">
+    <link rel="apple-touch-icon" href="/Logo BuscaLá com Entrega Rápida.png">
 
-    <link rel="stylesheet" href="src/public/css/app.css">
+    <link rel="stylesheet" href="/src/public/css/app.css">
 </head>
 
 <body>
@@ -17,18 +22,20 @@
     <header class="header">
         <div class="container header-content">
             <a href="/" class="logo">
-                Busca<span>Lá</span>
+                <img src="/Logo BuscaLá com Entrega Rápida.png" alt="BuscaLá" class="logo-img">
+                <span>Busca<span>Lá</span></span>
             </a>
 
             <nav class="nav">
                 <a href="#como-funciona">Como funciona</a>
                 <a href="#entregadores">Entregadores</a>
                 <a href="#solicitar">Solicitar entrega</a>
+                <a href="/dashboard" style="color: var(--primary); font-weight: 600;">Painel de Controle</a>
             </nav>
 
             <div class="header-actions">
-                <button class="btn btn-outline">Entrar</button>
-                <button class="btn btn-primary">Criar conta</button>
+                <a href="/dashboard" class="btn btn-outline">Entrar</a>
+                <a href="/dashboard" class="btn btn-primary">Acessar Painel</a>
             </div>
         </div>
     </header>
@@ -58,13 +65,13 @@
                     </p>
 
                     <div class="hero-actions">
-                        <button class="btn btn-primary btn-large">
+                        <a href="/dashboard?role=solicitante" class="btn btn-primary btn-large">
                             Solicitar uma entrega
-                        </button>
+                        </a>
 
-                        <button class="btn btn-outline btn-large">
+                        <a href="/dashboard?role=entregador" class="btn btn-outline btn-large">
                             Quero ser entregador
-                        </button>
+                        </a>
                     </div>
 
                 </div>
@@ -121,9 +128,9 @@
                         </div>
                     </div>
 
-                    <button class="btn btn-primary full">
+                    <a href="/dashboard?role=entregador" class="btn btn-primary full" style="display: block; text-align: center;">
                         Aceitar entrega
-                    </button>
+                    </a>
 
                 </div>
 
@@ -286,9 +293,9 @@
                         precisam de um entregador.
                     </p>
 
-                    <button class="btn btn-primary btn-large">
+                    <a href="/dashboard?role=entregador" class="btn btn-primary btn-large">
                         Quero ser entregador
-                    </button>
+                    </a>
 
                 </div>
 
@@ -322,9 +329,9 @@
 
                     </div>
 
-                    <button class="btn btn-primary full">
+                    <a href="/dashboard?role=entregador" class="btn btn-primary full" style="display: block; text-align: center;">
                         Ver pedido
-                    </button>
+                    </a>
 
                 </div>
 
@@ -341,7 +348,8 @@
 
             <div>
                 <a href="/" class="logo">
-                    Busca<span>Lá</span>
+                    <img src="/Logo BuscaLá com Entrega Rápida.png" alt="BuscaLá" class="logo-img">
+                    <span>Busca<span>Lá</span></span>
                 </a>
 
                 <p>
@@ -358,5 +366,6 @@
 
     </footer>
 
+    <script src="/src/public/js/app.js"></script>
 </body>
 </html>

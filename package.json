@@ -1,0 +1,16 @@
+{
+  "name": "busca-la",
+  "version": "1.0.0",
+  "description": "Busca Lá - Central de entregadores",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "dev": "node server.js",
+    "start": "node server.js",
+    "build": "echo 'Build successful'"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "leaflet": "^1.9.4"
+  }
+}

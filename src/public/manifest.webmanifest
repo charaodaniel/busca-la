@@ -1,0 +1,16 @@
+{
+  "name": "Busca Lá",
+  "short_name": "BuscaLá",
+  "description": "Busca Lá - Central de entregadores",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/Logo BuscaLá com Entrega Rápida.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

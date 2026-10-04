@@ -1,0 +1,984 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#111827">
+    <meta name="description" content="Painel de Controle Busca Lá - Central de Entregadores">
+    <meta property="og:title" content="Busca Lá - Painel de Controle">
+    <meta property="og:description" content="Central de entregadores e solicitantes">
+    <title>Painel de Controle - Busca Lá</title>
+    <link rel="icon" type="image/png" href="/Logo BuscaLá com Entrega Rápida.png">
+    <link rel="apple-touch-icon" href="/Logo BuscaLá com Entrega Rápida.png">
+
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css">
+    <link rel="stylesheet" href="/src/public/css/app.css">
+</head>
+<body class="dashboard-body">
+
+    <!-- TOPBAR -->
+    <header class="dashboard-header">
+        <div class="dashboard-topbar">
+            
+            <div class="topbar-brand-area">
+                <a href="/" class="logo">
+                    <img src="/Logo BuscaLá com Entrega Rápida.png" alt="BuscaLá" class="logo-img">
+                    <span>Busca<span>Lá</span></span>
+                </a>
+                <div class="topbar-divider"></div>
+                <div class="breadcrumb-trail">
+                    <span>Central de Operações</span>
+                    <span>/</span>
+                    <strong id="breadcrumbRole">Solicitante</strong>
+                </div>
+            </div>
+
+            <!-- Role Switcher -->
+            <div class="role-switcher" role="tablist" aria-label="Alternar papel de usuário">
+                <button class="role-pill active" id="btnRoleSolicitante" onclick="switchRole('solicitante')">
+                    <span>🏢 Solicitante</span>
+                </button>
+                <button class="role-pill" id="btnRoleEntregador" onclick="switchRole('entregador')">
+                    <span>🛵 Entregador</span>
+                </button>
+                <button class="role-pill" id="btnRoleAdmin" onclick="switchRole('admin')">
+                    <span>⚙️ Central / Admin</span>
+                </button>
+            </div>
+
+            <!-- Actions -->
+            <div class="topbar-actions">
+                <div style="display: flex; align-items: center; gap: 6px; font-size: 12px; color: #16a34a; font-weight: 600;">
+                    <span style="width: 8px; height: 8px; border-radius: 50%; background: #16a34a; display: inline-block;"></span>
+                    <span>Ao vivo</span>
+                </div>
+                <a href="/" class="btn btn-outline btn-sm">
+                    ← Voltar ao site
+                </a>
+            </div>
+
+        </div>
+    </header>
+
+    <!-- MAIN VIEWS CONTAINER -->
+    <main class="dashboard-main">
+
+        <!-- ==========================================
+             VIEW 1: SOLICITANTE
+             ========================================== -->
+        <section id="viewSolicitante" class="dashboard-view active">
+            
+            <div class="view-header">
+                <div class="view-title-group">
+                    <h1>Painel do Solicitante</h1>
+                    <p>Solicite entregadores sob demanda e acompanhe o status em tempo real.</p>
+                </div>
+                <div>
+                    <button class="btn btn-primary" onclick="focusNewOrderForm()">
+                        + Nova Entrega
+                    </button>
+                </div>
+            </div>
+
+            <!-- Summary Stats -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregas em andamento</span>
+                    <span class="stat-box-value tabular" id="solActiveCount">1</span>
+                    <span class="stat-box-sub">Monitoradas agora</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregas concluídas hoje</span>
+                    <span class="stat-box-value tabular" id="solCompletedCount">3</span>
+                    <span class="stat-box-sub">Finalizadas com sucesso</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Total investido hoje</span>
+                    <span class="stat-box-value tabular" id="solTotalSpent">R$ 37,50</span>
+                    <span class="stat-box-sub">Média de R$ 12,50 por entrega</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregadores disponíveis na rede</span>
+                    <span class="stat-box-value tabular" style="color: #16a34a;" id="solOnlineDrivers">2</span>
+                    <span class="stat-box-sub">Prontos para atender</span>
+                </div>
+            </div>
+
+            <!-- Grid: Active Tracking + New Order Form -->
+            <div class="dashboard-grid-2" style="margin-bottom: 32px;">
+
+                <!-- Active Order Tracker -->
+                <div class="dashboard-panel">
+                    <div class="panel-header">
+                        <h3>📦 Acompanhamento do Pedido Ativo</h3>
+                        <span class="badge-status waiting" id="activeOrderStatusBadge">Aguardando Aceite</span>
+                    </div>
+                    <div class="panel-body">
+                        
+                        <div id="activeOrderContainer">
+                            <!-- Stepper will be rendered here -->
+                            <div class="stepper-container">
+                                <div class="stepper-steps" id="stepperNodes">
+                                    <div class="stepper-line-bg"></div>
+                                    <div class="stepper-line-fill" id="stepperLineFill" style="width: 25%;"></div>
+
+                                    <div class="stepper-node completed" id="stepNode1">
+                                        <div class="stepper-circle">1</div>
+                                        <span class="stepper-label">Criado</span>
+                                    </div>
+                                    <div class="stepper-node active" id="stepNode2">
+                                        <div class="stepper-circle">2</div>
+                                        <span class="stepper-label">Aceite</span>
+                                    </div>
+                                    <div class="stepper-node" id="stepNode3">
+                                        <div class="stepper-circle">3</div>
+                                        <span class="stepper-label">Coleta</span>
+                                    </div>
+                                    <div class="stepper-node" id="stepNode4">
+                                        <div class="stepper-circle">4</div>
+                                        <span class="stepper-label">Em rota</span>
+                                    </div>
+                                    <div class="stepper-node" id="stepNode5">
+                                        <div class="stepper-circle">5</div>
+                                        <span class="stepper-label">Entregue</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Route details -->
+                            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin: 18px 0;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                                    <strong id="activeOrderId" style="font-size: 15px; color: var(--primary);">Pedido #BL-1082</strong>
+                                    <span class="tabular" style="font-weight: 700; color: var(--text);" id="activeOrderPrice">R$ 15,00</span>
+                                </div>
+                                
+                                <div style="font-size: 13px; margin-bottom: 8px;">
+                                    <span style="color: var(--muted);">De (Coleta):</span> <strong id="activeOrderOrigin">Rua Principal, 120 - Mercado Central</strong>
+                                </div>
+                                <div style="font-size: 13px; margin-bottom: 8px;">
+                                    <span style="color: var(--muted);">Para (Destino):</span> <strong id="activeOrderDestination">Rua das Flores, 450 - Bairro Centro</strong>
+                                </div>
+                                <div style="font-size: 13px; color: var(--muted);">
+                                    <span>Volumes:</span> <span id="activeOrderDesc">Caixa de produtos frescos (2 volumes)</span>
+                                </div>
+                            </div>
+
+                            <!-- Route Map (OpenStreetMap) -->
+                            <div style="margin: 18px 0;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                    <span style="font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                                        🗺️ Trajeto da Entrega (OpenStreetMap)
+                                    </span>
+                                    <span style="font-size: 11px; color: var(--muted);" id="solMapStatusBadge">Rota Coleta ➔ Destino</span>
+                                </div>
+                                <div id="solicitanteActiveMap" class="leaflet-route-map"></div>
+                                <div class="map-route-legend">
+                                    <div class="map-legend-items">
+                                        <span class="map-legend-item"><span class="map-legend-dot" style="background: #2563eb;"></span> Ponto A (Coleta)</span>
+                                        <span class="map-legend-item"><span class="map-legend-dot" style="background: #dc2626;"></span> Ponto B (Destino)</span>
+                                        <span class="map-legend-item"><span class="map-legend-dot" style="background: #f59e0b;"></span> 🛵 Entregador</span>
+                                    </div>
+                                    <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px;" onclick="recenterMap('solicitante')">Centralizar</button>
+                                </div>
+                            </div>
+
+                            <!-- Driver Info Assigned -->
+                            <div id="activeOrderDriverBox" style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 10px; padding: 14px; margin-bottom: 18px;">
+                                <div style="display: flex; align-items: center; justify-content: space-between;">
+                                    <div>
+                                        <small style="color: #1e40af; font-weight: 600; display: block;">ENTREGADOR DESIGNADO</small>
+                                        <strong id="activeDriverName" style="color: #1e3a8a; font-size: 15px;">Aguardando primeiro entregador aceitar...</strong>
+                                        <p id="activeDriverDetails" style="font-size: 12px; color: #3b82f6; margin-top: 2px;">Notificação enviada a todos os entregadores online</p>
+                                    </div>
+                                    <div id="activeDriverAvatar" style="font-size: 26px;">
+                                        📢
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Event Timeline -->
+                            <h4 style="font-size: 13px; font-weight: 700; color: var(--muted); margin-bottom: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Linha do Tempo de Eventos</h4>
+                            <div class="timeline" id="activeOrderTimeline">
+                                <div class="timeline-event">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-event-time">10:31</div>
+                                    <div class="timeline-event-text">Solicitação de entrega criada pelo Solicitante</div>
+                                </div>
+                                <div class="timeline-event">
+                                    <div class="timeline-dot"></div>
+                                    <div class="timeline-event-time">10:31</div>
+                                    <div class="timeline-event-text">Despacho via "Chamar Todos": entregadores online notificados</div>
+                                </div>
+                            </div>
+
+                            <!-- Star-Rating Component Container for Completed Order -->
+                            <div id="activeOrderRatingSection"></div>
+
+                        </div>
+
+                        <!-- Empty state if no active order -->
+                        <div id="noActiveOrderMsg" style="display: none; text-align: center; padding: 40px 20px;">
+                            <div style="font-size: 40px; margin-bottom: 12px;">✨</div>
+                            <h4 style="font-size: 16px; font-weight: 700;">Nenhuma entrega em andamento</h4>
+                            <p style="color: var(--muted); font-size: 13px; margin: 8px 0 16px;">Crie uma nova solicitação no formulário ao lado para chamar entregadores disponíveis.</p>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Create Order Form -->
+                <div class="dashboard-panel" id="newOrderPanel">
+                    <div class="panel-header">
+                        <h3>📝 Solicitar Nova Entrega</h3>
+                        <span style="font-size: 12px; color: var(--muted);">Despacho instantâneo</span>
+                    </div>
+                    <div class="panel-body">
+                        
+                        <form id="formNewOrder" onsubmit="handleCreateOrder(event)">
+                            
+                            <div class="form-grid">
+                                <!-- SEÇÃO: COLETAS COM BUSCA POR CEP -->
+                                <div class="form-group full" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                                        <label class="form-label" for="inputOrigin" style="margin-bottom: 0; font-weight: 700; color: #1e3a8a; display: flex; align-items: center; gap: 6px;">
+                                            <span>📍 Ponto de Coleta (Origem) *</span>
+                                        </label>
+                                        <span style="font-size: 11px; color: var(--muted);">Auto-preenchimento via CEP</span>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                                        <div style="position: relative; max-width: 170px; width: 100%;">
+                                            <input type="text" id="inputCepOrigin" class="form-input tabular" placeholder="CEP 00000-000" maxlength="9" oninput="handleCepInput(this, 'origin')" onblur="handleCepBlur('origin')">
+                                        </div>
+                                        <button type="button" class="btn btn-outline btn-sm" id="btnSearchCepOrigin" onclick="searchCep('origin')" style="white-space: nowrap;">
+                                            🔍 Buscar CEP
+                                        </button>
+                                        <span id="cepOriginFeedback" style="font-size: 12px; color: var(--muted);"></span>
+                                    </div>
+
+                                    <input type="text" id="inputOrigin" class="form-input" placeholder="Rua, número, bairro, cidade - UF" required value="Rua das Palmeiras, 300 - Vila Nova">
+                                </div>
+
+                                <!-- SEÇÃO: ENTREGA COM BUSCA POR CEP -->
+                                <div class="form-group full" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px;">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 6px;">
+                                        <label class="form-label" for="inputDestination" style="margin-bottom: 0; font-weight: 700; color: #166534; display: flex; align-items: center; gap: 6px;">
+                                            <span>🏁 Ponto de Entrega (Destino) *</span>
+                                        </label>
+                                        <span style="font-size: 11px; color: var(--muted);">Auto-preenchimento via CEP</span>
+                                    </div>
+                                    
+                                    <div style="display: flex; gap: 10px; margin-bottom: 10px; align-items: center; flex-wrap: wrap;">
+                                        <div style="position: relative; max-width: 170px; width: 100%;">
+                                            <input type="text" id="inputCepDestination" class="form-input tabular" placeholder="CEP 00000-000" maxlength="9" oninput="handleCepInput(this, 'destination')" onblur="handleCepBlur('destination')">
+                                        </div>
+                                        <button type="button" class="btn btn-outline btn-sm" id="btnSearchCepDestination" onclick="searchCep('destination')" style="white-space: nowrap;">
+                                            🔍 Buscar CEP
+                                        </button>
+                                        <span id="cepDestinationFeedback" style="font-size: 12px; color: var(--muted);"></span>
+                                    </div>
+
+                                    <input type="text" id="inputDestination" class="form-input" placeholder="Rua, número, bairro, cidade - UF" required value="Rua Goiás, 88 - Bairro Alto">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="inputContact">Telefone de Contato *</label>
+                                    <input type="tel" id="inputContact" class="form-input" placeholder="(11) 98765-4321" required value="(11) 97722-1144">
+                                </div>
+
+                                <div class="form-group">
+                                    <label class="form-label" for="inputDistance">Distância Estimada (km)</label>
+                                    <input type="number" step="0.1" id="inputDistance" class="form-input tabular" value="3.8" oninput="calculateSuggestedPrice()">
+                                </div>
+
+                                <div class="form-group full">
+                                    <label class="form-label" for="inputDescription">Descrição da Encomenda *</label>
+                                    <input type="text" id="inputDescription" class="form-input" placeholder="Ex: Pacote com 3 marmitas térmicas e talheres" required value="Caixa de documentos e contrato assinado">
+                                </div>
+
+                                <div class="form-group full">
+                                    <label class="form-label" for="inputNotes">Observações para o Entregador</label>
+                                    <textarea id="inputNotes" class="form-textarea" placeholder="Ex: Tocar interfone 42, procurar recepcionista Paula"></textarea>
+                                </div>
+
+                                <!-- Dispatch Mode Choice -->
+                                <div class="form-group full">
+                                    <label class="form-label">Modo de Despacho *</label>
+                                    <div class="mode-selector">
+                                        <div class="mode-choice-card selected" id="modeCardAll" onclick="selectDispatchMode('chamar_todos')">
+                                            <div class="mode-choice-title">
+                                                <span>📢 Chamar todos</span>
+                                            </div>
+                                            <p class="mode-choice-desc">Dispara notificação para todos os entregadores online. Quem aceitar primeiro assume.</p>
+                                        </div>
+
+                                        <div class="mode-choice-card" id="modeCardDirect" onclick="selectDispatchMode('direcionado')">
+                                            <div class="mode-choice-title">
+                                                <span>🎯 Direcionar</span>
+                                            </div>
+                                            <p class="mode-choice-desc">Escolha um entregador específico da rede para receber o chamado.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Driver Selector (conditional) -->
+                                <div class="form-group full" id="driverSelectGroup" style="display: none;">
+                                    <label class="form-label" for="selectAssignedDriver">Selecione o Entregador Online</label>
+                                    <select id="selectAssignedDriver" class="form-select">
+                                        <!-- Loaded dynamically -->
+                                    </select>
+                                </div>
+
+                                <!-- Price offer -->
+                                <div class="form-group full">
+                                    <label class="form-label" for="inputPrice">Valor da Entrega (R$) *</label>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <input type="number" step="0.50" id="inputPrice" class="form-input tabular" required value="14.00" style="font-size: 16px; font-weight: 700; max-width: 160px;">
+                                        <span style="font-size: 12px; color: var(--muted);">Sugestão calculada com base na distância</span>
+                                    </div>
+                                </div>
+
+                                <div class="form-group full" style="margin-top: 8px;">
+                                    <button type="submit" class="btn btn-primary btn-large full" id="btnSubmitOrder">
+                                        🚀 Publicar Solicitação de Entrega
+                                    </button>
+                                </div>
+
+                            </div>
+
+                        </form>
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- COMPONENTE: HISTÓRICO DE ENTREGAS CONCLUÍDAS (SOLICITANTE) -->
+            <div class="history-card-container" id="solicitanteCompletedComponent">
+                <div class="history-header-row">
+                    <div class="history-title-area">
+                        <h3>📦 Histórico de Entregas Concluídas</h3>
+                        <p>Acompanhe todos os pedidos finalizados, comprovantes digitais e avaliações dos entregadores parceiros.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-outline btn-sm" onclick="fetchAppState()">
+                            🔄 Atualizar Histórico
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Summary Cards for Completed Deliveries -->
+                <div class="history-kpi-grid">
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Entregas Concluídas</span>
+                        <div class="history-kpi-val tabular" id="solHistCompletedCount" style="color: #16a34a;">0</div>
+                        <span class="history-kpi-sub">Total acumulado com sucesso</span>
+                    </div>
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Total Investido</span>
+                        <div class="history-kpi-val tabular" id="solHistTotalSpent" style="color: var(--primary);">R$ 0,00</div>
+                        <span class="history-kpi-sub">Soma das entregas finalizadas</span>
+                    </div>
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Média das Avaliações</span>
+                        <div class="history-kpi-val tabular" id="solHistAvgRating" style="color: #f59e0b;">★ 5.0</div>
+                        <span class="history-kpi-sub">Nota média dada aos entregadores</span>
+                    </div>
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Taxa de Conclusão</span>
+                        <div class="history-kpi-val tabular" id="solHistSuccessRate" style="color: #0d9488;">100%</div>
+                        <span class="history-kpi-sub">Sem cancelamentos ou perdas</span>
+                    </div>
+                </div>
+
+                <!-- Search and Filters Bar with Status & Date Range -->
+                <div class="history-controls-bar">
+                    <div class="history-search-input-wrap">
+                        <span>🔍</span>
+                        <input type="text" id="solHistSearchInput" class="history-search-input" placeholder="Buscar por código (#BL-...), endereço de coleta/destino ou entregador..." oninput="handleFilterSolicitanteHistory()">
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <!-- Status Filter (Concluído, Cancelado, etc) -->
+                        <select id="solHistStatusSelect" class="history-filter-select" onchange="handleFilterSolicitanteHistory()" title="Filtrar por Status específico">
+                            <option value="todos">Todos os Status</option>
+                            <option value="concluido" selected>Entregue / Concluído ✅</option>
+                            <option value="cancelado">Cancelado ❌</option>
+                            <option value="em_entrega">Em Rota / Trânsito 🛵</option>
+                        </select>
+                        <!-- Period Preset Filter -->
+                        <select id="solHistPeriodSelect" class="history-filter-select" onchange="handleSolPeriodPresetChange()" title="Filtrar por período">
+                            <option value="todos">Todos os períodos</option>
+                            <option value="hoje">Hoje</option>
+                            <option value="ontem">Ontem</option>
+                            <option value="7dias">Últimos 7 dias</option>
+                            <option value="30dias">Últimos 30 dias</option>
+                            <option value="custom">Personalizado 📅</option>
+                        </select>
+                        <!-- Date Range Inputs (De / Até) -->
+                        <div id="solDateRangeInputs" style="display: flex; align-items: center; gap: 6px;">
+                            <label for="solHistStartDate" style="font-size: 11px; color: var(--muted); font-weight: 700;">De:</label>
+                            <input type="date" id="solHistStartDate" class="history-filter-date" onchange="handleFilterSolicitanteHistory()">
+                            <label for="solHistEndDate" style="font-size: 11px; color: var(--muted); font-weight: 700;">Até:</label>
+                            <input type="date" id="solHistEndDate" class="history-filter-date" onchange="handleFilterSolicitanteHistory()">
+                        </div>
+                        <!-- Clear Filters Button -->
+                        <button type="button" class="btn btn-outline btn-sm" onclick="clearSolicitanteFilters()" title="Limpar filtros">
+                            ↺ Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Counter & Active Filter Pills -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 8px;">
+                    <span id="solHistResultsCount">Mostrando entregas</span>
+                    <div id="solHistActiveTags" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+                </div>
+
+                <!-- Completed Deliveries Table -->
+                <div class="table-wrapper">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>Cód. / Data</th>
+                                <th>Origem ➔ Destino</th>
+                                <th>Entregador Parceiro</th>
+                                <th>Sua Avaliação</th>
+                                <th class="text-right">Valor Pago</th>
+                                <th class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="solicitanteCompletedTbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================
+             VIEW 2: ENTREGADOR
+             ========================================== -->
+        <section id="viewEntregador" class="dashboard-view">
+            
+            <div class="view-header">
+                <div class="view-title-group">
+                    <h1>Painel do Entregador</h1>
+                    <p>Receba pedidos instantâneos na sua rota e controle suas entregas.</p>
+                </div>
+                
+                <!-- Online / Offline Switcher -->
+                <div style="background: #ffffff; border: 1px solid var(--border); padding: 10px 18px; border-radius: 12px; display: flex; align-items: center; gap: 14px;">
+                    <div>
+                        <span style="font-size: 12px; color: var(--muted); display: block;">Seu status atual</span>
+                        <strong id="driverStatusLabel" style="color: #16a34a; font-size: 14px;">● ONLINE - Disponível</strong>
+                    </div>
+                    <div class="switch-container on" id="driverOnlineToggle" onclick="toggleDriverOnlineState()">
+                        <div class="switch-track">
+                            <div class="switch-thumb"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Driver Stats Row -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-box-label">Ganhos acumulados hoje</span>
+                    <span class="stat-box-value tabular" style="color: #16a34a;" id="drvEarningsToday">R$ 82,50</span>
+                    <span class="stat-box-sub">Disponível para saque diário</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregas realizadas hoje</span>
+                    <span class="stat-box-value tabular" id="drvDeliveriesToday">6</span>
+                    <span class="stat-box-sub">Taxa de conclusão: 100%</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Sua avaliação média</span>
+                    <span class="stat-box-value tabular" style="color: #d97706;">4.9 ★</span>
+                    <span class="stat-box-sub">148 avaliações de clientes</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Veículo cadastrado</span>
+                    <span class="stat-box-value" style="font-size: 18px; font-weight: 600; margin-top: 12px;">Honda CG 160</span>
+                    <span class="stat-box-sub">Placa: BRA-2E19 · Moto</span>
+                </div>
+            </div>
+
+            <!-- Push Notification & Real-Time Alert Bar -->
+            <div id="driverPushAlertBanner" class="driver-push-bar">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px;">
+                    <div style="display: flex; align-items: center; gap: 14px;">
+                        <div id="driverPushIconBox" style="width: 42px; height: 42px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; font-size: 22px;">
+                            🔔
+                        </div>
+                        <div>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <strong style="font-size: 14px; color: var(--text);">Alertas de Novas Corridas via Notificação Push</strong>
+                                <span class="badge" id="driverPushStatusBadge" style="background: #dbeafe; color: #1e40af; font-size: 11px; padding: 2px 8px;">Verificando...</span>
+                            </div>
+                            <p style="font-size: 12px; color: var(--muted); margin-top: 2px;" id="driverPushSubtext">
+                                Receba chamados com som e vibração em tempo real mesmo com o navegador em segundo plano ou em outra aba.
+                            </p>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <button type="button" class="btn btn-outline btn-sm" id="btnToggleSound" onclick="toggleAlertSound()" title="Ativar ou desativar som de alarme">
+                            🔊 Som Ativo
+                        </button>
+                        <button type="button" class="btn btn-outline btn-sm" onclick="testDriverPushAlert()" title="Testar notificação no navegador e áudio">
+                            🧪 Testar Alerta
+                        </button>
+                        <button type="button" class="btn btn-primary btn-sm" id="btnEnablePush" onclick="requestPushNotificationPermission()">
+                            🔔 Ativar Notificações
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Mission / In-progress Delivery -->
+            <div id="driverActiveMissionContainer" style="display: none; margin-bottom: 28px;">
+                <div class="dashboard-panel" style="border: 2px solid #2563eb;">
+                    <div class="panel-header" style="background: #eff6ff;">
+                        <div>
+                            <span style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;">Corrida em Andamento</span>
+                            <h3 id="missionOrderId" style="color: #1e3a8a;">Pedido #BL-1081</h3>
+                        </div>
+                        <span class="badge-status transit" id="missionStatusBadge">Em Coleta</span>
+                    </div>
+                    <div class="panel-body">
+                        
+                        <div class="dashboard-grid-2">
+                            <div>
+                                <div style="margin-bottom: 16px;">
+                                    <small style="color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700;">1. Ponto de Coleta (Origem)</small>
+                                    <p style="font-size: 15px; font-weight: 700; margin-top: 2px;" id="missionOrigin">Av. Brasil, 800 - Jardim América</p>
+                                    <small style="color: var(--muted);" id="missionRequester">Farmácia Viva Bem · Contato: (11) 98321-9988</small>
+                                </div>
+
+                                <div style="margin-bottom: 16px;">
+                                    <small style="color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700;">2. Ponto de Destino</small>
+                                    <p style="font-size: 15px; font-weight: 700; margin-top: 2px;" id="missionDestination">Alameda dos Ipês, 75 - Apto 32</p>
+                                </div>
+
+                                <div>
+                                    <small style="color: var(--muted); font-size: 11px; text-transform: uppercase; font-weight: 700;">Conteúdo da Carga</small>
+                                    <p style="font-size: 13px;" id="missionDesc">Medicamentos lacrados (2 volumes)</p>
+                                </div>
+                            </div>
+
+                            <div style="background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 18px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <span style="font-size: 12px; color: var(--muted);">Valor a receber nesta corrida:</span>
+                                    <div class="stat-box-value tabular" style="color: #16a34a; font-size: 32px;" id="missionPrice">R$ 12,50</div>
+                                    <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">Distância aproximada: <strong id="missionDistance">2.8 km</strong></p>
+                                </div>
+
+                                <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 20px;">
+                                    <button class="btn btn-primary full btn-large" id="btnAdvanceMission" onclick="handleAdvanceMission()">
+                                        📦 Confirmar Coleta Realizada
+                                    </button>
+                                    <button class="btn btn-outline full" onclick="handleCallRequester()">
+                                        📞 Ligar para o Solicitante
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Driver Mission Route Map -->
+                        <div style="margin-top: 20px; border-top: 1px solid var(--border); padding-top: 18px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <span style="font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 6px;">
+                                    🗺️ Mapa do Trajeto da Corrida (OpenStreetMap)
+                                </span>
+                                <span style="font-size: 11px; color: var(--muted);" id="driverMapStatusBadge">Rota até o destino</span>
+                            </div>
+                            <div id="driverMissionMap" class="leaflet-route-map"></div>
+                            <div class="map-route-legend">
+                                <div class="map-legend-items">
+                                    <span class="map-legend-item"><span class="map-legend-dot" style="background: #2563eb;"></span> Ponto A (Coleta)</span>
+                                    <span class="map-legend-item"><span class="map-legend-dot" style="background: #dc2626;"></span> Ponto B (Destino)</span>
+                                    <span class="map-legend-item"><span class="map-legend-dot" style="background: #f59e0b;"></span> 🛵 Minha Posição</span>
+                                </div>
+                                <button type="button" class="btn btn-outline btn-sm" style="padding: 2px 8px; font-size: 11px;" onclick="recenterMap('entregador')">Centralizar</button>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- Radar: Available Delivery Calls -->
+            <div class="dashboard-panel" style="margin-bottom: 32px;">
+                <div class="panel-header">
+                    <div>
+                        <h3>📢 Radar de Solicitações Próximas</h3>
+                        <span style="font-size: 12px; color: var(--muted);">Disponíveis para aceite imediato com transmissão push</span>
+                    </div>
+                    <button class="btn btn-outline btn-sm" onclick="simulateIncomingBroadcastOrder()" title="Simular transmissão de nova corrida em tempo real">
+                        ⚡ Simular Novo Chamado
+                    </button>
+                </div>
+                <div class="panel-body">
+                    
+                    <!-- When offline notice -->
+                    <div id="driverOfflineWarning" style="display: none; background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px; padding: 18px; text-align: center; margin-bottom: 16px;">
+                        <strong style="color: #991b1b; display: block; font-size: 15px;">Você está Offline</strong>
+                        <p style="color: #b91c1c; font-size: 13px; margin: 4px 0 12px;">Ative seu status para Online para começar a receber alertas de entregas na sua área.</p>
+                        <button class="btn btn-primary btn-sm" onclick="toggleDriverOnlineState()">Ficar Online Agora</button>
+                    </div>
+
+                    <!-- Available requests container -->
+                    <div id="availableOrdersList">
+                        <!-- Populated dynamically with cards -->
+                    </div>
+
+                    <!-- Radar pulse empty state -->
+                    <div id="driverRadarWaiting" class="radar-box">
+                        <div class="radar-signal">
+                            📡
+                        </div>
+                        <h4 style="font-size: 16px; font-weight: 700; color: var(--text);">Aguardando novas solicitações...</h4>
+                        <p style="color: var(--muted); font-size: 13px; max-width: 460px; margin: 6px auto 0;">
+                            Seu radar está ligado. Assim que um cliente solicitar um entregador na sua região, você receberá a notificação em tempo real aqui.
+                        </p>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- COMPONENTE: HISTÓRICO DE ENTREGAS CONCLUÍDAS (ENTREGADOR) -->
+            <div class="history-card-container" id="driverCompletedComponent">
+                <div class="history-header-row">
+                    <div class="history-title-area">
+                        <h3>🏁 Histórico de Entregas Concluídas</h3>
+                        <p>Consulte todas as corridas finalizadas por você, valores líquidos creditados, rotas e notas mútuas.</p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button class="btn btn-outline btn-sm" onclick="fetchAppState()">
+                            🔄 Atualizar Extrato
+                        </button>
+                    </div>
+                </div>
+
+                <!-- KPI Summary Cards for Driver Completed Deliveries -->
+                <div class="history-kpi-grid">
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Corridas Finalizadas</span>
+                        <div class="history-kpi-val tabular" id="drvHistCompletedCount" style="color: #16a34a;">0</div>
+                        <span class="history-kpi-sub">Total de entregas concluídas</span>
+                    </div>
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Ganhos Líquidos</span>
+                        <div class="history-kpi-val tabular" id="drvHistEarnings" style="color: #16a34a;">R$ 0,00</div>
+                        <span class="history-kpi-sub">Creditado diretamente a você</span>
+                    </div>
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Km Rodados</span>
+                        <div class="history-kpi-val tabular" id="drvHistTotalKm" style="color: var(--primary);">0.0 km</div>
+                        <span class="history-kpi-sub">Distância total percorrida</span>
+                    </div>
+                    <div class="history-kpi-item">
+                        <span class="history-kpi-label">Sua Nota Média</span>
+                        <div class="history-kpi-val tabular" id="drvHistAvgRating" style="color: #f59e0b;">★ 5.0</div>
+                        <span class="history-kpi-sub">Média avaliada pelos clientes</span>
+                    </div>
+                </div>
+
+                <!-- Search and Filters Bar with Status & Date Range -->
+                <div class="history-controls-bar">
+                    <div class="history-search-input-wrap">
+                        <span>🔍</span>
+                        <input type="text" id="drvHistSearchInput" class="history-search-input" placeholder="Buscar por código (#BL-...), cliente ou endereço..." oninput="handleFilterDriverHistory()">
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                        <!-- Status Filter -->
+                        <select id="drvHistStatusSelect" class="history-filter-select" onchange="handleFilterDriverHistory()" title="Filtrar por Status específico">
+                            <option value="todos">Todos os Status</option>
+                            <option value="concluido" selected>Concluída / Entregue ✅</option>
+                            <option value="cancelado">Cancelada ❌</option>
+                        </select>
+                        <!-- Period Preset Filter -->
+                        <select id="drvHistPeriodSelect" class="history-filter-select" onchange="handleDrvPeriodPresetChange()" title="Filtrar por período">
+                            <option value="todos">Todos os períodos</option>
+                            <option value="hoje">Hoje</option>
+                            <option value="ontem">Ontem</option>
+                            <option value="7dias">Últimos 7 dias</option>
+                            <option value="30dias">Últimos 30 dias</option>
+                            <option value="custom">Personalizado 📅</option>
+                        </select>
+                        <!-- Date Range Inputs (De / Até) -->
+                        <div id="drvDateRangeInputs" style="display: flex; align-items: center; gap: 6px;">
+                            <label for="drvHistStartDate" style="font-size: 11px; color: var(--muted); font-weight: 700;">De:</label>
+                            <input type="date" id="drvHistStartDate" class="history-filter-date" onchange="handleFilterDriverHistory()">
+                            <label for="drvHistEndDate" style="font-size: 11px; color: var(--muted); font-weight: 700;">Até:</label>
+                            <input type="date" id="drvHistEndDate" class="history-filter-date" onchange="handleFilterDriverHistory()">
+                        </div>
+                        <!-- Clear Filters Button -->
+                        <button type="button" class="btn btn-outline btn-sm" onclick="clearDriverFilters()" title="Limpar filtros">
+                            ↺ Limpar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Counter & Active Filter Pills -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; font-size: 12px; color: var(--muted); flex-wrap: wrap; gap: 8px;">
+                    <span id="drvHistResultsCount">Mostrando corridas</span>
+                    <div id="drvHistActiveTags" style="display: flex; gap: 6px; flex-wrap: wrap;"></div>
+                </div>
+
+                <!-- Driver Completed Deliveries Table -->
+                <div class="table-wrapper">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>Cód. / Horário</th>
+                                <th>Trajeto (Origem ➔ Destino)</th>
+                                <th>Cliente Solicitante</th>
+                                <th>Distância</th>
+                                <th>Avaliações</th>
+                                <th class="text-right">Valor Líquido</th>
+                                <th class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="driverCompletedTbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+
+        <!-- ==========================================
+             VIEW 3: ADMIN / CENTRAL
+             ========================================== -->
+        <section id="viewAdmin" class="dashboard-view">
+            
+            <div class="view-header">
+                <div class="view-title-group">
+                    <h1>Central de Operações & Gestão</h1>
+                    <p>Visão geral de todos os pedidos, controle da frota e monitoramento em tempo real.</p>
+                </div>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn btn-outline btn-sm" onclick="fetchAppState()">
+                        🔄 Atualizar Dados
+                    </button>
+                    <button class="btn btn-primary btn-sm" onclick="openDriverApprovalModal()">
+                        + Cadastrar Entregador
+                    </button>
+                </div>
+            </div>
+
+            <!-- Global Operation KPIs -->
+            <div class="stats-row">
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregas Ativas na Rede</span>
+                    <span class="stat-box-value tabular" style="color: var(--primary);" id="adminActiveOrders">2</span>
+                    <span class="stat-box-sub">Em rota ou aguardando aceite</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregadores Conectados</span>
+                    <span class="stat-box-value tabular" style="color: #16a34a;" id="adminOnlineDrivers">3</span>
+                    <span class="stat-box-sub">De 4 cadastrados na base</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Entregas Concluídas Hoje</span>
+                    <span class="stat-box-value tabular" id="adminCompletedOrders">8</span>
+                    <span class="stat-box-sub">Taxa de sucesso: 98.4%</span>
+                </div>
+                <div class="stat-box">
+                    <span class="stat-box-label">Volume Transacionado Hoje</span>
+                    <span class="stat-box-value tabular" id="adminTotalVolume">R$ 138,50</span>
+                    <span class="stat-box-sub">Faturamento bruto gerado</span>
+                </div>
+            </div>
+
+            <!-- Real-time Deliveries Monitor -->
+            <div class="dashboard-panel" style="margin-bottom: 32px;">
+                <div class="panel-header">
+                    <h3>🛰️ Monitor de Corridas em Tempo Real</h3>
+                    <span class="badge-status online">Sistema Operacional Ativo</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>Cód.</th>
+                                <th>Solicitante</th>
+                                <th>Origem → Destino</th>
+                                <th>Modo</th>
+                                <th>Entregador Responsável</th>
+                                <th>Status Operacional</th>
+                                <th class="text-right">Valor</th>
+                                <th class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminOrdersTbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Fleet Drivers Management -->
+            <div class="dashboard-panel">
+                <div class="panel-header">
+                    <h3>🛵 Base de Entregadores Cadastrados</h3>
+                    <span style="font-size: 12px; color: var(--muted);">Aprovação de cadastros e status da frota</span>
+                </div>
+                <div class="table-wrapper">
+                    <table class="dash-table">
+                        <thead>
+                            <tr>
+                                <th>Entregador</th>
+                                <th>Telefone</th>
+                                <th>Veículo & Placa</th>
+                                <th>Conexão</th>
+                                <th>Situação Cadastral</th>
+                                <th>Avaliação</th>
+                                <th class="text-right">Ganhos Hoje</th>
+                                <th class="text-right">Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="adminDriversTbody">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- MODAL: Order Details & Event History -->
+    <div class="modal-overlay" id="modalOrderDetails" onclick="closeOrderModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="modalOrderTitle">Detalhes do Pedido</h3>
+                    <small style="color: var(--muted);" id="modalOrderDate">Criado hoje às 10:31</small>
+                </div>
+                <button class="modal-close-btn" onclick="closeOrderModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="modalOrderBody">
+                <!-- Dynamically filled -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: New Driver Registration -->
+    <div class="modal-overlay" id="modalNewDriver" onclick="closeDriverModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Cadastrar Novo Entregador</h3>
+                <button class="modal-close-btn" onclick="closeDriverModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="formNewDriver" onsubmit="handleRegisterDriver(event)">
+                    <div class="form-grid single">
+                        <div class="form-group">
+                            <label class="form-label" for="drvName">Nome Completo *</label>
+                            <input type="text" id="drvName" class="form-input" required placeholder="Ex: Roberto Alves">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drvPhone">WhatsApp / Celular *</label>
+                            <input type="tel" id="drvPhone" class="form-input" required placeholder="(11) 98765-4321">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drvVehicle">Veículo / Modelo *</label>
+                            <input type="text" id="drvVehicle" class="form-input" required placeholder="Ex: Moto - Honda CG Fan 160">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" for="drvPlate">Placa do Veículo</label>
+                            <input type="text" id="drvPlate" class="form-input" placeholder="Ex: ABC-1D23">
+                        </div>
+                        <div class="form-group" style="margin-top: 10px;">
+                            <button type="submit" class="btn btn-primary full">
+                                Salvar e Cadastrar
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    <!-- MODAL: Star Rating Component (User & Driver) -->
+    <div class="modal-overlay" id="modalRateDelivery" onclick="closeRateModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3 id="rateModalTitle">Avaliar Entrega</h3>
+                    <small style="color: var(--muted);" id="rateModalSubtitle">Avalie a pontualidade e qualidade do serviço</small>
+                </div>
+                <button class="modal-close-btn" onclick="closeRateModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="rateModalBody">
+                <!-- Dynamically filled with interactive star rating component -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Comprovante Digital de Entrega -->
+    <div class="modal-overlay" id="modalDeliveryReceipt" onclick="closeReceiptModal(event)">
+        <div class="modal-card" style="max-width: 520px;" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div>
+                    <h3>📄 Comprovante Digital de Entrega</h3>
+                    <small style="color: var(--muted);">Protocolo Oficial BuscaLá</small>
+                </div>
+                <button class="modal-close-btn" onclick="closeReceiptModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="receiptModalBody">
+                <!-- Dynamically filled receipt content -->
+            </div>
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: 1px solid var(--border); background: #f8fafc; border-bottom-left-radius: 14px; border-bottom-right-radius: 14px;">
+                <button type="button" class="btn btn-outline btn-sm no-print" onclick="closeReceiptModal()">Fechar</button>
+                <button type="button" class="btn btn-primary btn-sm no-print" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Real-Time Floating Incoming Delivery Alert -->
+    <div id="incomingDeliveryFloatingAlert" class="floating-delivery-alert">
+        <div class="floating-delivery-header">
+            <span class="floating-delivery-pill">🚨 NOVA CORRIDA DISPONÍVEL</span>
+            <button type="button" onclick="dismissIncomingAlert()" style="background: none; border: none; color: #94a3b8; font-size: 20px; cursor: pointer; line-height: 1;">&times;</button>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px;">
+            <strong id="alertOrderId" style="font-size: 17px; color: #ffffff;">Pedido #BL-1083</strong>
+            <div class="floating-delivery-price tabular" id="alertOrderPrice">R$ 16,50</div>
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 4px;">
+            <span style="color: #60a5fa;">Origem:</span> <span id="alertOrderOrigin">Rua Bela Cintra, 400</span>
+        </div>
+        <div style="font-size: 13px; color: #cbd5e1; margin-bottom: 8px;">
+            <span style="color: #f87171;">Destino:</span> <span id="alertOrderDestination">Av. Paulista, 1578</span>
+        </div>
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 14px;" id="alertOrderDetails">
+            Distância: 3.2 km · Carga: Sacola de roupas
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button type="button" class="btn btn-primary full btn-large" id="btnAcceptIncomingAlert" onclick="handleAcceptAlertOrder()" style="background: #16a34a; font-weight: 700;">
+                ⚡ Aceitar Corrida Agora
+            </button>
+            <button type="button" class="btn btn-outline" onclick="dismissIncomingAlert()" style="background: rgba(255,255,255,0.1); color: #ffffff; border-color: rgba(255,255,255,0.2);">
+                Dispensar
+            </button>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Open Source Leaflet Map JS -->
+    <script src="/vendor/leaflet/leaflet.js"></script>
+
+    <!-- Client Application Script -->
+    <script src="/src/public/js/dashboard.js"></script>
+
+</body>
+</html>
