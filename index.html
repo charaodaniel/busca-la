@@ -3,16 +3,360 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Olá Mundo</title>
-</head>
-<body>
-    <h1>Olá, mundo!</h1>
-    <h1>Ola, mundo!</h1>
-    <body>
-	<p>
-	Ola
-	</p>
 
-    </body>
+    <meta name="theme-color" content="#111827">
+    <meta name="description" content="Busca Lá - Central de entregadores">
+
+    <title>Busca Lá</title>
+
+    <link rel="stylesheet" href="src/public/css/app.css">
+</head>
+
+<body>
+
+    <header class="header">
+        <div class="container header-content">
+            <a href="/" class="logo">
+                Busca<span>Lá</span>
+            </a>
+
+            <nav class="nav">
+                <a href="#como-funciona">Como funciona</a>
+                <a href="#entregadores">Entregadores</a>
+                <a href="#solicitar">Solicitar entrega</a>
+            </nav>
+
+            <div class="header-actions">
+                <button class="btn btn-outline">Entrar</button>
+                <button class="btn btn-primary">Criar conta</button>
+            </div>
+        </div>
+    </header>
+
+
+    <main>
+
+        <!-- HERO -->
+
+        <section class="hero">
+            <div class="container hero-grid">
+
+                <div class="hero-content">
+
+                    <span class="badge">
+                        🚚 Entregas sob demanda
+                    </span>
+
+                    <h1>
+                        Precisa entregar?
+                        <strong>Busca Lá.</strong>
+                    </h1>
+
+                    <p>
+                        Encontre entregadores disponíveis para transportar
+                        encomendas, produtos, documentos e muito mais.
+                    </p>
+
+                    <div class="hero-actions">
+                        <button class="btn btn-primary btn-large">
+                            Solicitar uma entrega
+                        </button>
+
+                        <button class="btn btn-outline btn-large">
+                            Quero ser entregador
+                        </button>
+                    </div>
+
+                </div>
+
+
+                <div class="hero-card">
+
+                    <div class="card-header">
+                        <div>
+                            <small>Exemplo de pedido</small>
+                            <h3>Nova entrega</h3>
+                        </div>
+
+                        <span class="status online">
+                            Disponível
+                        </span>
+                    </div>
+
+                    <div class="route">
+
+                        <div class="route-point">
+                            <span class="route-icon origin">A</span>
+
+                            <div>
+                                <small>Coleta</small>
+                                <strong>Mercado Central</strong>
+                                <p>Rua Principal, 120</p>
+                            </div>
+                        </div>
+
+                        <div class="route-line"></div>
+
+                        <div class="route-point">
+                            <span class="route-icon destination">B</span>
+
+                            <div>
+                                <small>Destino</small>
+                                <strong>Rua das Flores, 450</strong>
+                                <p>Bairro Centro</p>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <div class="delivery-info">
+                        <div>
+                            <small>Distância</small>
+                            <strong>4,2 km</strong>
+                        </div>
+
+                        <div>
+                            <small>Valor</small>
+                            <strong>R$ 15,00</strong>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary full">
+                        Aceitar entrega
+                    </button>
+
+                </div>
+
+            </div>
+        </section>
+
+
+        <!-- COMO FUNCIONA -->
+
+        <section class="section" id="como-funciona">
+
+            <div class="container">
+
+                <div class="section-heading">
+                    <span class="eyebrow">SIMPLES E DIRETO</span>
+
+                    <h2>
+                        Uma central para conectar
+                        <span>entregadores e clientes.</span>
+                    </h2>
+
+                    <p>
+                        Quem precisa entregar solicita.
+                        Quem faz entregas recebe e aceita.
+                    </p>
+                </div>
+
+
+                <div class="features">
+
+                    <article class="feature-card">
+                        <div class="feature-icon">📦</div>
+
+                        <h3>Solicite</h3>
+
+                        <p>
+                            Crie um pedido informando onde buscar,
+                            onde entregar e os detalhes da encomenda.
+                        </p>
+                    </article>
+
+
+                    <article class="feature-card">
+                        <div class="feature-icon">📢</div>
+
+                        <h3>Chame</h3>
+
+                        <p>
+                            Chame todos os entregadores disponíveis
+                            ou envie o pedido diretamente para alguém.
+                        </p>
+                    </article>
+
+
+                    <article class="feature-card">
+                        <div class="feature-icon">🚚</div>
+
+                        <h3>Entregue</h3>
+
+                        <p>
+                            Um entregador aceita o pedido e realiza
+                            a entrega até o destino.
+                        </p>
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- MODOS -->
+
+        <section class="section section-dark" id="solicitar">
+
+            <div class="container">
+
+                <div class="section-heading light">
+
+                    <span class="eyebrow">DUAS FORMAS</span>
+
+                    <h2>
+                        Você decide
+                        <span>quem recebe o pedido.</span>
+                    </h2>
+
+                </div>
+
+
+                <div class="mode-grid">
+
+                    <article class="mode-card">
+
+                        <span class="mode-number">01</span>
+
+                        <div class="mode-icon">📢</div>
+
+                        <h3>Chamar todos</h3>
+
+                        <p>
+                            Envie a solicitação para os entregadores
+                            disponíveis. O primeiro que aceitar fica
+                            responsável pela entrega.
+                        </p>
+
+                        <div class="mode-example">
+                            <span>Pedido enviado para</span>
+                            <strong>Todos os disponíveis</strong>
+                        </div>
+
+                    </article>
+
+
+                    <article class="mode-card">
+
+                        <span class="mode-number">02</span>
+
+                        <div class="mode-icon">🎯</div>
+
+                        <h3>Direcionar</h3>
+
+                        <p>
+                            Escolha um entregador específico e envie
+                            a solicitação diretamente para ele.
+                        </p>
+
+                        <div class="mode-example">
+                            <span>Pedido enviado para</span>
+                            <strong>João da Silva</strong>
+                        </div>
+
+                    </article>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ENTREGADORES -->
+
+        <section class="section" id="entregadores">
+
+            <div class="container driver-section">
+
+                <div class="driver-content">
+
+                    <span class="eyebrow">PARA ENTREGADORES</span>
+
+                    <h2>
+                        Mais oportunidades
+                        para suas entregas.
+                    </h2>
+
+                    <p>
+                        Cadastre-se, fique disponível e receba
+                        solicitações de pessoas e empresas que
+                        precisam de um entregador.
+                    </p>
+
+                    <button class="btn btn-primary btn-large">
+                        Quero ser entregador
+                    </button>
+
+                </div>
+
+
+                <div class="driver-status">
+
+                    <div class="driver-status-header">
+                        <span>Seu status</span>
+
+                        <span class="status online">
+                            ● Online
+                        </span>
+                    </div>
+
+                    <div class="notification">
+
+                        <div class="notification-icon">
+                            📦
+                        </div>
+
+                        <div>
+                            <strong>Nova entrega disponível</strong>
+                            <p>
+                                Mercado Central → Centro
+                            </p>
+
+                            <small>
+                                4,2 km · R$ 15,00
+                            </small>
+                        </div>
+
+                    </div>
+
+                    <button class="btn btn-primary full">
+                        Ver pedido
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+
+        <div class="container footer-content">
+
+            <div>
+                <a href="/" class="logo">
+                    Busca<span>Lá</span>
+                </a>
+
+                <p>
+                    Conectando quem precisa entregar
+                    com quem pode entregar.
+                </p>
+            </div>
+
+            <span>
+                © 2026 Busca Lá
+            </span>
+
+        </div>
+
+    </footer>
+
 </body>
 </html>
