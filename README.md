@@ -20,7 +20,6 @@ Exemplos:
 * Escritórios
 * Pequenos comércios
 * Pessoas físicas
-* Outros tipos de estabelecimentos ou serviços
 
 ## 🚚 Funcionamento
 
@@ -50,236 +49,215 @@ O solicitante poderá criar uma solicitação de entrega informando:
 * Observações
 * Valor ou condições da entrega
 
-## 📢 Formas de solicitar um entregador
+### Formas de solicitar um entregador
 
-O sistema terá inicialmente dois modos.
+**Chamar todos** — a solicitação é enviada para todos os entregadores disponíveis e o primeiro que aceitar fica responsável.
 
-### Chamar todos
-
-A solicitação é enviada para os entregadores disponíveis.
-
-O primeiro entregador que aceitar fica responsável pela entrega.
-
-```text
-Novo pedido
-     ↓
-Chamar todos
-     ↓
-Entregadores recebem notificação
-     ↓
-Um entregador aceita
-     ↓
-Pedido atribuído
-```
-
-Após um entregador aceitar, os demais não poderão aceitar aquele pedido.
-
-### Direcionar para um entregador
-
-O solicitante poderá escolher um entregador específico.
-
-Somente o entregador selecionado receberá a solicitação.
-
-```text
-Novo pedido
-     ↓
-Escolher entregador
-     ↓
-Solicitação enviada
-     ↓
-Entregador aceita
-     ↓
-Pedido atribuído
-```
-
-## 📦 Status da entrega
-
-O fluxo básico será:
-
-```text
-RASCUNHO
-   ↓
-AGUARDANDO ACEITE
-   ↓
-ACEITO
-   ↓
-EM COLETA
-   ↓
-EM ENTREGA
-   ↓
-CONCLUÍDO
-```
-
-Também poderão existir estados de:
-
-* Recusado
-* Cancelado
-* Expirado
-
-## 👥 Tipos de usuários
-
-### Entregador
-
-Responsável por aceitar e realizar as entregas.
-
-### Solicitante
-
-Pessoa ou organização que solicita uma entrega.
-
-### Operador
-
-Responsável pelo acompanhamento e gerenciamento operacional.
-
-### Administrador
-
-Responsável pela administração geral da plataforma.
+**Direcionado** — o solicitante escolhe um entregador específico e somente ele recebe a solicitação.
 
 ## 🛠️ Stack
 
-### Frontend
-
-* HTML5
-* CSS
-* JavaScript
-* Tailwind CSS
-* HTMX
-* PWA
-
 ### Backend
 
-* Node.js
+* Node.js (ES Modules) — testado no Node 24
+* Express 4
+* PostgreSQL (driver `pg`) — testado no PostgreSQL 18
 
-### Banco de dados
+### Frontend
 
-* PostgreSQL
+* HTML5, CSS e JavaScript vanilla (sem frameworks)
+* Leaflet — mapas de acompanhamento no dashboard
+* PWA — manifest + service worker (instalável no celular)
+* ViaCEP — preenchimento automático de endereço por CEP
 
-A aplicação será desenvolvida priorizando HTML e renderização server-side com HTMX, utilizando JavaScript apenas quando houver necessidade de comportamento no cliente.
+### Gerenciador de pacotes
 
-## 📱 PWA
+* npm (ou Bun — o repositório inclui `bun.lock`)
 
-O sistema será desenvolvido como Progressive Web App.
+## ✅ Status atual
 
-Objetivos:
+**Demo funcional.** Já implementado:
 
-* Instalação no celular
-* Interface responsiva
-* Funcionamento em dispositivos móveis
-* Service Worker
-* Manifest
-* Notificações
-* Experiência semelhante a aplicativo
+* Landing page (`/`) com apresentação do serviço
+* Autenticação completa (login multi-identificador, cadastro, sessão, logout)
+* Painel operacional (`/dashboard`) com visões de solicitante, entregador e admin
+* Criação e acompanhamento de pedidos com histórico de eventos
+* Avaliação mútua (solicitante ↔ entregador) com cálculo de média
+* Dados persistidos em PostgreSQL (sobrevivem a reinícios)
 
-## 🔔 Notificações
+## 🚀 Como rodar
 
-As notificações serão importantes principalmente para os entregadores.
+### Pré-requisitos
 
-Quando uma nova solicitação estiver disponível, o entregador poderá receber uma notificação informando que existe uma nova entrega.
+* Node.js 18+
+* PostgreSQL em execução
 
-A implementação definitiva de comunicação em tempo real será definida durante o desenvolvimento.
+### Passos
 
-## 🗄️ Banco de dados
+```bash
+# 1. Instalar dependências
+npm install          # ou: bun install
 
-O sistema utilizará PostgreSQL.
+# 2. Criar o banco de dados
+createdb busca_la    # ou: psql -c 'CREATE DATABASE busca_la OWNER dev;'
 
-Principais entidades previstas:
+# 3. Configurar variáveis de ambiente
+cp .env.example .env
+# edite o .env e ajuste DATABASE_URL com seu usuário/senha
 
-```text
-Usuários
-   │
-   ├── Entregadores
-   │      └── Veículos
-   │
-   └── Solicitantes
-          └── Estabelecimentos
+# 4. Aplicar o schema
+psql "$DATABASE_URL" -f migrations/001_init.sql
 
-Pedidos
-   │
-   ├── Origem
-   ├── Destino
-   ├── Solicitante
-   └── Entregador
+# 5. (Opcional) Semear usuários e dados de demonstração
+psql "$DATABASE_URL" -f migrations/seed.sql
 
-Eventos do pedido
+# 6. Iniciar o servidor
+npm run dev          # ou: node server.js
 ```
 
-O histórico de eventos será mantido para permitir auditoria e acompanhamento da operação.
+Acesse:
 
-Exemplo:
+| Página | URL |
+|---|---|
+| Landing | `http://localhost:3000/` |
+| Login | `http://localhost:3000/login` |
+| Cadastro | `http://localhost:3000/cadastro` |
+| Painel | `http://localhost:3000/dashboard` |
+
+> Em rede local, use o IP do aparelho (ex.: `http://192.168.8.52:3000`). O servidor escuta em `0.0.0.0`.
+
+## 👥 Usuários de teste
+
+O seed (`migrations/seed.sql`) cria usuários de demonstração em todos os papéis:
+
+| Nome | Papel | Login aceito por |
+|---|---|---|
+| Daniel Charão | admin | telefone `55996393353`, username `daniel`, e-mail |
+| Maria Teste | solicitante | username `maria`, e-mail, telefone, CPF |
+| João Entregador | entregador | username `joao`, e-mail, telefone, CPF |
+| Ana Operadora | operador | username `ana`, e-mail, telefone, CPF |
+
+A senha padrão dos usuários de teste está definida em `migrations/seed.sql`.
+
+Também há 4 entregadores e 5 pedidos de demonstração (BL-1077 a BL-1082) em vários status.
+
+## 🔐 Autenticação
+
+* **Login multi-identificador**: o mesmo campo aceita nome de usuário, e-mail, telefone (só dígitos) ou CPF (com ou sem pontuação)
+* **Cadastro**: nome + senha + pelo menos um identificador; tipo de conta (solicitante, entregador ou operador)
+* **Senhas** armazenadas com scrypt + salt aleatório (formato `<salt-hex>:<hash-hex>`)
+* **Sessões** em tabela `sessoes`, com cookie `HttpOnly` / `SameSite=Lax` válido por 30 dias
+* **Banco de dados configurado** via variável `DATABASE_URL` no `.env` (não versionado)
+
+Variável opcional no `.env`:
 
 ```text
-10:31  Pedido criado
-10:31  Chamar todos
-10:32  Entregadores notificados
-10:32  Entregador aceitou
-10:45  Coleta realizada
-11:03  Em entrega
-11:17  Entrega concluída
+REQUIRE_AUTH=1   # exige login para acessar /dashboard (redireciona para /login)
 ```
 
-## 📁 Estrutura inicial
+## 🔌 API REST
+
+### Autenticação
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `POST` | `/api/auth/register` | Cria conta `{ nome, senha, username?, email?, telefone?, cpf?, papel? }` |
+| `POST` | `/api/auth/login` | Autentica `{ identifier, senha }` e define cookie de sessão |
+| `POST` | `/api/auth/logout` | Encerra a sessão atual |
+| `GET` | `/api/auth/me` | Retorna o usuário logado (`{ user: null }` se anônimo) |
+
+### Pedidos e entregadores
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/state` | Estado completo: `{ drivers, orders, stats }` |
+| `GET` | `/api/orders` | Lista todos os pedidos com eventos |
+| `POST` | `/api/orders` | Cria pedido `{ originAddress, destinationAddress, description, dispatchMode, ... }` |
+| `PATCH` | `/api/orders/:id/status` | Atualiza status `{ status, driverId? }` |
+| `POST` | `/api/orders/:id/rate` | Avalia `{ role: 'solicitante'\|'entregador', stars, comment?, tags? }` |
+| `GET` | `/api/drivers` | — (usar `/api/state`) |
+| `POST` | `/api/drivers` | Cadastra entregador `{ name, vehicle, phone?, plate? }` |
+| `PATCH` | `/api/drivers/:id` | Atualiza `{ isOnline?, approvalStatus? }` |
+
+> Os IDs de entregador usados pela API têm o prefixo `drv-` (ex.: `drv-1`); os pedidos são identificados pelo código (ex.: `BL-1082`).
+
+## 📦 Fluxo de status do pedido
+
+```text
+aguardando_aceite → aceito → em_coleta → em_entrega → concluido
+                        └────────────────────────→ cancelado
+```
+
+Cada transição registra um evento com horário no histórico do pedido.
+
+## 🗄️ Modelo de dados
+
+```text
+usuarios (id, nome, username*, email*, telefone*, cpf*, senha_hash, papel, ativo, criado_em)
+   │      * únicos — qualquer um pode ser nulo, mas ao menos um é exigido
+   ├── sessoes (token PK, usuario_id FK)
+   └── entregadores (id, usuario_id FK?, nome, veiculo, placa, online, aprovacao, nota, entregas, ganhos_hoje)
+
+pedidos (id, codigo*, codigo do pedido BL-XXXX, solicitante, endereços, preço,
+         modo_despacho, entregador_id FK?, status, coordenadas, avaliações JSONB, criado_em)
+   └── pedido_eventos (pedido_id FK, hora, descricao)
+```
+
+## 📁 Estrutura do projeto
 
 ```text
 busca-la/
 ├── migrations/
+│   ├── 001_init.sql        # schema (tabelas e índices)
+│   └── seed.sql            # usuários e dados de demonstração
 ├── src/
 │   ├── public/
-│   │   ├── css/
-│   │   ├── icons/
-│   │   └── js/
-│   │
-│   ├── server/
-│   │   ├── controllers/
-│   │   ├── middleware/
-│   │   ├── models/
-│   │   ├── routes/
-│   │   ├── services/
-│   │   ├── app.js
-│   │   └── server.js
-│   │
-│   └── views/
-│       ├── admin/
-│       ├── entregador/
-│       ├── layouts/
-│       ├── partials/
-│       └── solicitante/
-│
-├── tests/
-├── index.html
-├── README.md
-└── .gitignore
+│   │   ├── css/app.css
+│   │   ├── images/logo.png
+│   │   ├── js/app.js       # script da landing page (+ registro do SW)
+│   │   ├── js/dashboard.js # lógica do painel
+│   │   ├── manifest.webmanifest
+│   │   └── sw.js           # service worker (PWA)
+│   └── server/
+│       ├── app.js          # rotas Express (API + páginas)
+│       ├── auth.js         # scrypt, sessões e cookies
+│       ├── db.js           # pool PostgreSQL (.env)
+│       └── server.js       # bootstrap (porta/host)
+├── tests/                  # (vazio — a implementar)
+├── .env.example
+├── dashboard.html          # painel operacional
+├── index.html              # landing page
+├── login.html              # tela de login
+├── cadastro.html           # tela de cadastro
+├── package.json
+└── server.js               # entry point (importa src/server/server.js)
 ```
 
-## 🚧 Status
+## 🗺️ Roadmap
 
-**Em desenvolvimento**
-
-O projeto está na fase inicial de definição da arquitetura e funcionalidades.
-
-## 🗺️ Roadmap inicial
-
-* [ ] Estrutura inicial do projeto
-* [ ] Configuração Node.js
-* [ ] Configuração PostgreSQL
-* [ ] Sistema de autenticação
-* [ ] Cadastro de entregadores
-* [ ] Cadastro de solicitantes
-* [ ] Aprovação de entregadores
-* [ ] Controle online/offline
-* [ ] Criação de pedidos
-* [ ] Chamar todos
-* [ ] Pedido direcionado
-* [ ] Aceite de pedidos
-* [ ] Fluxo de status da entrega
-* [ ] Histórico de entregas
-* [ ] Notificações
-* [ ] Painel do entregador
-* [ ] Painel do solicitante
-* [ ] Painel administrativo
-* [ ] PWA
-* [ ] Testes
+* [x] Estrutura inicial do projeto
+* [x] Configuração Node.js / Express
+* [x] Configuração PostgreSQL (schema + seed)
+* [x] Sistema de autenticação (login multi-identificador, cadastro, sessão)
+* [x] Cadastro de entregadores
+* [x] Cadastro de solicitantes
+* [x] Aprovação de entregadores (painel admin)
+* [x] Controle online/offline
+* [x] Criação de pedidos
+* [x] Chamar todos
+* [x] Pedido direcionado
+* [x] Aceite de pedidos
+* [x] Fluxo de status da entrega
+* [x] Histórico de eventos do pedido
+* [x] Avaliação mútua com médias
+* [x] Painel do solicitante / entregador / admin (demo)
+* [x] PWA base (manifest + service worker)
+* [ ] Notificações em tempo real
+* [ ] Recuperação de senha
+* [ ] Testes automatizados
+* [ ] Anexar imagens/ícones do PWA na raiz servida
 * [ ] Deploy
 
 ## 📄 Licença
 
 A licença do projeto será definida posteriormente.
-

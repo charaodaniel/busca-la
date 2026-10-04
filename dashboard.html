@@ -980,5 +980,27 @@
     <!-- Client Application Script -->
     <script src="/src/public/js/dashboard.js"></script>
 
-</body>
+<script>
+(async function authChip(){
+  try {
+    const r = await fetch('/api/auth/me');
+    const d = await r.json();
+    if (d.user) {
+      const nav = document.querySelector('.dash-header .header-actions') || document.querySelector('.header-actions');
+      if (nav) {
+        const chip = document.createElement('div');
+        chip.className = 'auth-chip';
+        chip.style.cssText = 'display:flex;align-items:center;gap:8px;font-size:13px;';
+        chip.innerHTML = '<span style="opacity:.85;">Olá, <b>' + d.user.nome.split(' ')[0] + '</b></span>' +
+          '<button id="btnLogout" style="padding:4px 10px;font-size:12px;border-radius:6px;border:1px solid rgba(255,255,255,.3);background:transparent;color:inherit;cursor:pointer;">Sair</button>';
+        nav.prepend(chip);
+        document.getElementById('btnLogout').onclick = async () => {
+          await fetch('/api/auth/logout', { method: 'POST' });
+          location.href = '/login';
+        };
+      }
+    }
+  } catch (e) {}
+})();
+</script></body>
 </html>
