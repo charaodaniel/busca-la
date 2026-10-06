@@ -7,6 +7,9 @@ import {
   clearSessionCookie, criarSessao, buscarSessao, deletarSessao,
   usuarioSeguro, COOKIES,
 } from './auth.js';
+import {
+  getPublicKey, saveSubscription, removeSubscription, notifyNewOrder, pushConfigured,
+} from './push.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -165,6 +168,33 @@ app.get('/api/auth/me', (req, res) => {
   res.json({ user: usuarioSeguro(req.user) });
 });
 
+// ---------- WEB PUSH (VAPID) ----------
+app.get('/api/push/public-key', (_req, res) => {
+  res.json({ publicKey: getPublicKey(), enabled: pushConfigured });
+});
+
+app.post('/api/push/subscribe', async (req, res) => {
+  try {
+    const sub = req.body && req.body.subscription ? req.body.subscription : req.body;
+    const id = await saveSubscription(sub, req.user ? req.user.id : null);
+    if (!id) return res.status(400).json({ error: 'Subscription inválida.' });
+    res.status(201).json({ success: true, id });
+  } catch (e) {
+    console.error('push subscribe:', e);
+    res.status(500).json({ error: 'Erro ao registrar inscrição de push.' });
+  }
+});
+
+app.post('/api/push/unsubscribe', async (req, res) => {
+  try {
+    await removeSubscription(req.body && req.body.endpoint);
+    res.json({ success: true });
+  } catch (e) {
+    console.error('push unsubscribe:', e);
+    res.status(500).json({ error: 'Erro ao remover inscrição de push.' });
+  }
+});
+
 // ---------- mapeamento DB -> frontend ----------
 function mapDriver(d) {
   return {
@@ -299,13 +329,15 @@ app.post('/api/orders', async (req, res) => {
 
     let entregadorId = null;
     let entregadorNome = null;
+    let entregadorUsuarioId = null;
     if (dispatchMode === 'direcionado' && assignedDriverId) {
-      const drv = await q('SELECT id, nome FROM entregadores WHERE id = $1', [
+      const drv = await q('SELECT id, nome, usuario_id FROM entregadores WHERE id = $1', [
         Number(String(assignedDriverId).replace(/^drv-/, '')) || 0,
       ]);
       if (drv.rows[0]) {
         entregadorId = drv.rows[0].id;
         entregadorNome = drv.rows[0].nome;
+        entregadorUsuarioId = drv.rows[0].usuario_id || null;
       }
     }
 
@@ -350,9 +382,16 @@ app.post('/api/orders', async (req, res) => {
     );
 
     const full = await q(`${SQL_PEDIDOS} WHERE p.id = $1`, [pedidoId]);
+    const order = mapOrder(full.rows[0]);
+
+    // Web Push (fire-and-forget): avisa o entregador-alvo ou todos os inscritos
+    notifyNewOrder({ order, targetUsuarioId: entregadorUsuarioId }).catch((err) =>
+      console.error('push new order:', err)
+    );
+
     res.status(201).json({
       success: true,
-      order: mapOrder(full.rows[0]),
+      order,
       stats: await getStats(),
     });
   } catch (e) {

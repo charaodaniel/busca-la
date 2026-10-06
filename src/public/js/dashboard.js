@@ -2107,6 +2107,10 @@ function initPushNotificationSystem() {
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/src/public/sw.js').then(reg => {
             console.log('BuscaLá ServiceWorker registrado:', reg.scope);
+            // Se a permissão já foi concedida, garante a inscrição no Web Push
+            if ('Notification' in window && Notification.permission === 'granted') {
+                subscribeToWebPush();
+            }
         }).catch(err => {
             console.log('Falha ao registrar ServiceWorker:', err);
         });
@@ -2196,6 +2200,9 @@ async function requestPushNotificationPermission() {
             playDeliveryChime();
             showToast('Notificações push ativadas com sucesso! Você receberá alertas de novas corridas.', '🔔');
 
+            // Assina o Web Push no servidor (notificações reais)
+            subscribeToWebPush();
+
             // Send welcome push notification
             if (navigator.serviceWorker && navigator.serviceWorker.controller) {
                 const reg = await navigator.serviceWorker.ready;
@@ -2216,6 +2223,44 @@ async function requestPushNotificationPermission() {
         }
     } catch (e) {
         console.warn('Erro ao solicitar permissão de notificação:', e);
+    }
+}
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    return outputArray;
+}
+
+// Assina o navegador no Web Push real (VAPID) e registra a inscrição no servidor.
+async function subscribeToWebPush() {
+    try {
+        if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+        const reg = await navigator.serviceWorker.ready;
+        const res = await fetch('/api/push/public-key');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data.publicKey) return;
+
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(data.publicKey),
+            });
+        }
+
+        await fetch('/api/push/subscribe', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ subscription: sub }),
+        });
+        console.log('Web Push inscrito com sucesso.');
+    } catch (e) {
+        console.warn('Erro ao assinar Web Push:', e);
     }
 }
 

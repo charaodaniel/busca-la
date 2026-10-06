@@ -149,10 +149,18 @@ Também há 4 entregadores e 5 pedidos de demonstração (BL-1077 a BL-1082) em 
 * **Sessões** em tabela `sessoes`, com cookie `HttpOnly` / `SameSite=Lax` válido por 30 dias
 * **Banco de dados configurado** via variável `DATABASE_URL` no `.env` (não versionado)
 
-Variável opcional no `.env`:
+Variáveis opcionais no `.env`:
 
 ```text
 REQUIRE_AUTH=1   # exige login para acessar /dashboard (redireciona para /login)
+```
+
+Web Push (VAPID) — gere as chaves com `node scripts/generate-vapid-keys.mjs`:
+
+```text
+VAPID_PUBLIC_KEY=...
+VAPID_PRIVATE_KEY=...
+VAPID_SUBJECT=mailto:contato@buscala.app
 ```
 
 ## 🔌 API REST
@@ -165,6 +173,14 @@ REQUIRE_AUTH=1   # exige login para acessar /dashboard (redireciona para /login)
 | `POST` | `/api/auth/login` | Autentica `{ identifier, senha }` e define cookie de sessão |
 | `POST` | `/api/auth/logout` | Encerra a sessão atual |
 | `GET` | `/api/auth/me` | Retorna o usuário logado (`{ user: null }` se anônimo) |
+
+### Web Push (VAPID)
+
+| Método | Rota | Descrição |
+|---|---|---|
+| `GET` | `/api/push/public-key` | Retorna a chave pública VAPID (`{ publicKey, enabled }`) |
+| `POST` | `/api/push/subscribe` | Registra uma inscrição `{ subscription }` (associa ao usuário logado) |
+| `POST` | `/api/push/unsubscribe` | Remove a inscrição `{ endpoint }` |
 
 ### Pedidos e entregadores
 
@@ -252,11 +268,22 @@ busca-la/
 * [x] Avaliação mútua com médias
 * [x] Painel do solicitante / entregador / admin (demo)
 * [x] PWA base (manifest + service worker)
-* [ ] Notificações em tempo real
+* [x] Notificações em tempo real (Web Push/VAPID)
 * [ ] Recuperação de senha
-* [ ] Testes automatizados
+* [x] Testes automatizados (integração com `node:test` + PostgreSQL)
+* [x] CI (GitHub Actions: testes + PostgreSQL)
 * [ ] Anexar imagens/ícones do PWA na raiz servida
-* [ ] Deploy
+* [ ] Deploy público (há `scripts/deploy.sh` para o Termux)
+
+## 🧪 Testes
+
+Suíte de integração com o runner nativo do Node (`node:test`), contra um PostgreSQL real.
+
+```bash
+npm test
+```
+
+Os testes usam um banco dedicado (`busca_la_test`, derivado do `DATABASE_URL`) e aplicam as migrações automaticamente. Requer o PostgreSQL em execução e um `.env` configurado.
 
 ## 📄 Licença
 

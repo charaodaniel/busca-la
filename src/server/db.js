@@ -18,16 +18,20 @@ function loadEnv() {
       }
     }
   } catch {
-    // .env ausente: segue com fallback
+    // .env ausente: tratado abaixo
   }
 }
 loadEnv();
 
-export const pool = new pg.Pool({
-  connectionString:
-    process.env.DATABASE_URL ||
-    'postgresql://dev:02061994@127.0.0.1:5432/busca_la',
-  max: 10,
-});
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  console.error(
+    'ERRO: variável DATABASE_URL não definida.\n' +
+      'Copie .env.example para .env e configure a conexão com o PostgreSQL.'
+  );
+  process.exit(1);
+}
+
+export const pool = new pg.Pool({ connectionString, max: 10 });
 
 export const q = (text, params) => pool.query(text, params);
